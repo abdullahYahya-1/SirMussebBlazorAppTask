@@ -1,0 +1,136 @@
+﻿<!-- Index.razor -->
+@page "/"
+@using BlazorAppTask.Data
+@inject AppDbContext DbContext
+
+<h3>Classes with More Than 100 Students</h3>
+<ul>
+    @foreach (var classWithCount in ClassesWithMoreThan100Students)
+    {
+        <li>@classWithCount.ClassName - Room: @classWithCount.RoomNumber</li>
+    }
+</ul>
+
+<h3>Students with No Classes in Department 22</h3>
+<ul>
+    @foreach (var student in StudentsWithNoClassesInDept22)
+    {
+        <li>ID: @student.Sid - Major: @student.Major</li>
+    }
+</ul>
+
+
+<h3>Students Enrolled in More Than Two Classes</h3>
+<ul>
+    @foreach (var studentWithClassCount in StudentsEnrolledInMoreThanTwoClasses)
+    {
+        <li>ID: @studentWithClassCount.Student.Sid - Name: @studentWithClassCount.Student.Sname - Enrolled Classes: @studentWithClassCount.EnrolledClassCount</li>
+    }
+</ul>
+
+<h3>Students Enrolled in 'Computer Science' Classes</h3>
+<ul>
+    @foreach (var student in StudentsInComputerScienceClasses)
+    {
+        <li>ID: @student.Sid - Name: @student.Sname</li>
+    }
+</ul>
+
+<h3>Faculty Names and Total Classes Taught</h3>
+<ul>
+    @foreach (var facultyWithClassCount in FacultyWithTotalClasses)
+    {
+        <li>Name: @facultyWithClassCount.Faculty.Fname - Total Classes: @facultyWithClassCount.ClassCount</li>
+    }
+</ul>
+
+@code {
+    List<ClassWithCount> ClassesWithMoreThan100Students { get; set; }
+    List<Student> StudentsWithNoClassesInDept22 { get; set; }
+    List<StudentWithClassCount> StudentsEnrolledInMoreThanTwoClasses { get; set; }
+    List<Student> StudentsInComputerScienceClasses { get; set; }
+    List<FacultyWithClassCount> FacultyWithTotalClasses { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Retrieve grouped data from the database
+        var groupedData = DbContext.Enrolled
+            .GroupBy(enrollment => enrollment.Cid)
+            .ToList(); // Execute the grouping on the client side
+
+        // Filter the grouped data on the client side
+        ClassesWithMoreThan100Students = groupedData
+            .Where(grouped => grouped.Count() > 100)
+            .Join(
+                DbContext.Classes,
+                grouped => grouped.Key,
+                course => course.Cid,
+                (grouped, course) => new ClassWithCount
+                    {
+                        ClassName = course.Name,
+                        RoomNumber = course.RoomNumber
+                    }
+            )
+            .ToList();
+
+
+
+
+        StudentsWithNoClassesInDept22 = (from student in DbContext.Students
+                                         where !DbContext.Enrolled.Any(enrollment =>
+                                             enrollment.Sid == student.Sid &&
+                                             DbContext.Classes.Any(course =>
+                                                 course.Cid == enrollment.Cid &&
+                                                 DbContext.Faculty.Any(faculty =>
+                                                     faculty.Fid == course.FacultyID &&
+                                                     faculty.DeptID == 22)))
+                                         select student).ToList();
+
+        
+
+        StudentsEnrolledInMoreThanTwoClasses = (from student in DbContext.Students
+                                                join enrollment in DbContext.Enrolled on student.Sid equals enrollment.Sid
+                                                group enrollment by student into grouped
+                                                where grouped.Count() > 2
+                                                select new StudentWithClassCount
+                                                    {
+                                                        Student = grouped.Key,
+                                                        EnrolledClassCount = grouped.Count()
+                                                    }).ToList();
+
+        StudentsInComputerScienceClasses = (from student in DbContext.Students
+                                            join enrollment in DbContext.Enrolled on student.Sid equals enrollment.Sid
+                                            join course in DbContext.Classes on enrollment.Cid equals course.Cid
+                                            join faculty in DbContext.Faculty on course.FacultyID equals faculty.Fid
+                                            where student.Major == "Computer Science"
+                                            select student).ToList();
+
+
+        // d. Faculty Names and Total Classes Taught
+        FacultyWithTotalClasses = (from faculty in DbContext.Faculty
+                                   join course in DbContext.Classes on faculty.Fid equals course.FacultyID into facultyClasses
+                                   select new FacultyWithClassCount
+                                       {
+                                           Faculty = faculty,
+                                           ClassCount = facultyClasses.Count()
+                                       }).OrderByDescending(x => x.ClassCount).ToList();
+    }
+
+    public class ClassWithCount
+    {
+        public string ClassName { get; set; }
+        public string RoomNumber { get; set; }
+    }
+
+    public class StudentWithClassCount
+    {
+        public Student Student { get; set; }
+        public int EnrolledClassCount { get; set; }
+    }
+
+    public class FacultyWithClassCount
+    {
+        public Faculty Faculty { get; set; }
+        public int ClassCount { get; set; }
+    }
+}

@@ -1,0 +1,42 @@
+﻿<!-- ClassForm.razor -->
+@page "/classform"
+@using BlazorAppTask.Data
+@inject AppDbContext DbContext
+
+<h3>Add New Class</h3>
+
+<!-- Your form UI for adding a new class goes here -->
+<div>
+    <label for="className">Class Name:</label>
+    <input id="className" @bind="newClassName" />
+
+    <label for="classRoomNumber">Room Number:</label>
+    <input id="classRoomNumber" @bind="newClassRoomNumber" />
+
+    <label for="classFacultyId">Faculty ID:</label>
+    <input id="classFacultyId" @bind="newClassFacultyId" />
+
+    <button @onclick="AddNewClass">Add Class</button>
+</div>
+
+@code {
+    private string newClassName;
+    private string newClassRoomNumber;
+    private int newClassFacultyId;
+
+    // Method to add a new class
+    private void AddNewClass()
+    {
+        var newClass = new Class
+            {
+                Name = newClassName,
+                RoomNumber = newClassRoomNumber,
+                FacultyID = newClassFacultyId
+            };
+
+        DbContext.AddClass(newClass);
+
+        // Optionally, you might want to navigate back to a class list or another page
+        // NavigationManager.NavigateTo("/classlist");
+    }
+}

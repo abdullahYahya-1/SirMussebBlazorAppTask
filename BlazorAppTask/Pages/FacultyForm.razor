@@ -1,0 +1,42 @@
+﻿<!-- FacultyForm.razor -->
+@page "/facultyform"
+@using BlazorAppTask.Data
+@inject AppDbContext DbContext
+
+<h3>Add New Faculty</h3>
+
+<!-- Your form UI for adding a new faculty goes here -->
+<div>
+    <label for="facultyName">Faculty Name:</label>
+    <input id="facultyName" @bind="newFacultyName" />
+
+    <label for="facultyDeptId">Department ID:</label>
+    <input id="facultyDeptId" @bind="newFacultyDeptId" />
+
+    <label for="facultyStanding">Faculty Standing:</label>
+    <input id="facultyStanding" @bind="newFacultyStanding" />
+
+    <button @onclick="AddNewFaculty">Add Faculty</button>
+</div>
+
+@code {
+    private string newFacultyName;
+    private int newFacultyDeptId;
+    private string newFacultyStanding;
+
+    // Method to add a new faculty
+    private void AddNewFaculty()
+    {
+        var newFaculty = new Faculty
+            {
+                Fname = newFacultyName,
+                DeptID = newFacultyDeptId,
+                Standing = newFacultyStanding
+            };
+
+        DbContext.AddFaculty(newFaculty);
+
+        // Optionally, you might want to navigate back to a faculty list or another page
+        // NavigationManager.NavigateTo("/facultylist");
+    }
+}

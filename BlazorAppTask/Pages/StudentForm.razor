@@ -1,0 +1,42 @@
+﻿<!-- StudentForm.razor -->
+@page "/studentform"
+@using BlazorAppTask.Data
+@inject AppDbContext DbContext
+
+<h3>Add New Student</h3>
+
+<!-- Your form UI for adding a new student goes here -->
+<div>
+    <label for="studentName">Student Name:</label>
+    <input id="studentName" @bind="newStudentName" />
+
+    <label for="studentMajor">Student Major:</label>
+    <input id="studentMajor" @bind="newStudentMajor" />
+
+    <label for="studentStanding">Student Standing:</label>
+    <input id="studentStanding" @bind="newStudentStanding" />
+
+    <button @onclick="AddNewStudent">Add Student</button>
+</div>
+
+@code {
+    private string newStudentName;
+    private string newStudentMajor;
+    private string newStudentStanding;
+
+    // Method to add a new student
+    private void AddNewStudent()
+    {
+        var newStudent = new Student
+            {
+                Sname = newStudentName,
+                Major = newStudentMajor,
+                Standing = newStudentStanding
+            };
+
+        DbContext.AddStudent(newStudent);
+
+        // Optionally, you might want to navigate back to a student list or another page
+        // NavigationManager.NavigateTo("/studentlist");
+    }
+}

@@ -1,0 +1,37 @@
+﻿<!-- EnrolledForm.razor -->
+@page "/enrolledform"
+@using BlazorAppTask.Data
+@inject AppDbContext DbContext
+
+<h3>Add New Enrollment</h3>
+
+
+<div>
+    <label for="enrolledStudentId">Student ID:</label>
+    <input id="enrolledStudentId" @bind="newEnrolledStudentId" />
+
+    <label for="enrolledClassId">Class ID:</label>
+    <input id="enrolledClassId" @bind="newEnrolledClassId" />
+
+    <button @onclick="AddNewEnrollment">Enroll Student</button>
+</div>
+
+@code {
+    private int newEnrolledStudentId;
+    private int newEnrolledClassId;
+
+    // Method to add a new enrollment
+    private void AddNewEnrollment()
+    {
+        var newEnrollment = new Enrolled
+            {
+                Sid = newEnrolledStudentId,
+                Cid = newEnrolledClassId
+            };
+
+        DbContext.AddEnrolled(newEnrollment);
+
+        // Optionally, you might want to navigate back to an enrollment list or another page
+        // NavigationManager.NavigateTo("/enrollmentlist");
+    }
+}
